@@ -1,20 +1,17 @@
-<svg version="1.1"
-     baseProfile="full"
-     width="30" height="40"
-     viewBox="0 0 30 40"
-      fill="none"
-     xmlns="http://www.w3.org/2000/svg">
-   <g stroke='teal' stroke-width='2'>
-     <!-- <line x1='0' y1='0' x2='30' y2='30' stroke='#fff' stroke-width='1'></line>
-     <line x1='30' y1='0' x2='0' y2='30' stroke='#fff' stroke-width='1'></line> -->
-      <polygon points='18,18 28,26 8,26'/>
-      <circle cx='18' cy='14' r='3'></circle>
-      <line x1='18' y1='7' x2='18' y2='11'></line>
-      <circle cx='18' cy='4' r='3'></circle>
-      <line x1='7.5' y1='26' x2='3.5' y2='32'></line>
-      <line x1='12.5' y1='26' x2='8.5' y2='32'></line>
-      <line x1='18.5' y1='26' x2='14.5' y2='32'></line>
-      <line x1='24' y1='26' x2='20' y2='32'></line>
-      <line x1='29' y1='26' x2='25' y2='32'></line>
-   </g>
+<svg width="30" height="30" xmlns="http://www.w3.org/2000/svg">
+ <g fill="none" stroke="#929292" stroke-width="2">
+  
+  <line   x1="4" y1="23" x2="25" y2="23"  />
+  <line x1="5" y1="23" x2="0" y2="31" />
+  <line x1="10" y1="23" x2="5" y2="31"/>
+  <line x1="15" y1="23" x2="10" y2="31"/>
+  <line x1="20" y1="23" x2="15" y2="31"/>
+  <line x1="25" y1="23" x2="20" y2="31" />
+  <line x1="4" y1="23" x2="15" y2="18"/>
+  <line  x1="15" y1="18" x2="25" y2="23" />
+  <ellipse cx="15" cy="15" id="svg_9" rx="3" ry="3"/>
+  <ellipse  ry="3" rx="3" id="svg_10" cy="4" cx="15"  />
+  <line  y2="12" x2="15" y1="7" x1="15" />
+ </g>
+
 </svg>

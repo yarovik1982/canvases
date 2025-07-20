@@ -5,6 +5,6 @@
       fill="none"
      xmlns="http://www.w3.org/2000/svg">
    <g stroke='teal' stroke-width='2'>
-      <circle cx='15' cy='15' r='4'></circle>
+      <circle cx='15' cy='15' r='3'></circle>
    </g>
 </svg>
