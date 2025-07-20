@@ -77,6 +77,7 @@ supports.forEach(sup => {
     }
     sup._canvasX = x; // сохраняем для кликов
     sup._canvasY = y;
+    // console.log("sup._canvasX: "+ sup._canvasX,"sup._canvasY: " + sup._canvasY)
 });
 
 // --- Обработка кликов по canvas beam ---
@@ -95,15 +96,27 @@ canvases[0].el.addEventListener('click', function(e) {
         return dx >= -w/2 && dx <= w/2 && dy >= anchorY && dy <= anchorY + h;
     });
     if (found) {
-        // Рисуем вертикальную линию в координатах опоры
-        contextBeam.save();
-        contextBeam.strokeStyle = 'red';
-        contextBeam.lineWidth = 2;
-        contextBeam.beginPath();
-        contextBeam.moveTo(found._canvasX, 0);
-        contextBeam.lineTo(found._canvasX, canvases[0].el.height);
-        contextBeam.stroke();
-        contextBeam.restore();
+        // Рисуем вертикальные линии на остальных канвасах строго от Y=8 до Y=-8
+        for (let i = 1; i < canvases.length; i++) {
+            const c = canvases[i];
+            const plotter = c.plotter;
+            let x = plotter.x0 + found.x / plotter.xScale;
+            // Y=8 и Y=-8 в координатах plotter (canvas Y вниз!)
+            let y8 = plotter.y0 - 8 / plotter.yScale;
+            let y_8 = plotter.y0 - (-8) / plotter.yScale;
+            // Для отладки:
+            // console.log(`canvas ${i+1}: x=${x}, y8=${y8}, y_8=${y_8}`);
+            let yTop = Math.min(y8, y_8);
+            let yBottom = Math.max(y8, y_8);
+            c.ctx.save();
+            c.ctx.strokeStyle = '#333';
+            c.ctx.lineWidth = 1;
+            c.ctx.beginPath();
+            c.ctx.moveTo(x, yTop);
+            c.ctx.lineTo(x, yBottom);
+            c.ctx.stroke();
+            c.ctx.restore();
+        }
     }
 });
 
