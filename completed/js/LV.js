@@ -4,7 +4,7 @@ import { Plotter } from "./plotter.js";
 
 
 // ДЛИНА БАЛКИ
-const zmax = 40;
+const zmax = 20;
 // --- Инициализация всех canvas ---
 const canvases = [
 	{ id: "beam", plotter: null, ctx: null },
@@ -39,7 +39,7 @@ const supports = [
 	{ type: "hinge", x: 16 },
 	{ type: "fixed", x: 19 },
 	{ type: "Zl", x: 0 },
-	{ type: "ZR", x: 20 },
+	// { type: "ZR", x: 20 },
 ];
 
 const clickedSupports = new Set(); // Для хранения кликнутых опор
@@ -118,7 +118,7 @@ canvases[0].el.addEventListener("click", function (e) {
         clickedSupports.add(found.x); // Добавляем координату X опоры
         
         // Рисуем вертикальные линии на остальных канвасах
-        for (let i = 1; i < canvases.length; i++) {
+        for (let i = 0; i < canvases.length; i++) {
             const c = canvases[i];
             const plotter = c.plotter;
             let x = plotter.x0 + found.x / plotter.xScale;
