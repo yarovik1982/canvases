@@ -1,10 +1,24 @@
 //LV.js
 
 import { Plotter } from "./plotter.js";
+import { useUtils } from "./utils.js";
 
+const { setVisibleHeader, hideHeader } = useUtils();
+
+const header = document.querySelector(".header");
+
+window.addEventListener('mousemove', function(e) {
+  const isNearTop = e.clientY < 50;
+  
+  if(isNearTop) {
+    setVisibleHeader(header);
+  } else {
+    hideHeader(header);
+  }
+});
 
 // ДЛИНА БАЛКИ
-const zmax = 40;
+const zmax = 20;
 // --- Инициализация всех canvas ---
 const canvases = [
 	{ id: "beam", plotter: null, ctx: null },
@@ -17,10 +31,14 @@ for (let c of canvases) {
 	c.el = document.getElementById(c.id);
 	c.ctx = c.el.getContext("2d");
 	c.plotter = new Plotter(c.ctx, 740, 310, 30, 200, 0, zmax, -8, 8);
+	if (c.id === "beam") {
+		c.plotter.drawXTicks(1)
+		c.plotter.drawUnitsX(1)
+	}
 	c.plotter.drawGrid(1, 1);
 	c.plotter.drawAxes("X", "Y");
-	c.plotter.drawTicks(1, 1);
-	c.plotter.drawUnits(1, 1);
+	// c.plotter.drawTicks(1, 1);
+	// c.plotter.drawUnitsY( 1);
 }
 
 // --- ДЛЯ ПЕРВОГО КАНВАСА: ОПОРЫ И ШАРНИРЫ ---
@@ -147,6 +165,9 @@ canvases[0].el.addEventListener("click", function (e) {
                 canvases[1].plotter.drawGraph(q0,q1)
                 canvases[2].plotter.drawGraph(m0,m1)
                 canvases[3].plotter.drawGraph(r0,r1)
+					 canvases[1].plotter.drawXTicksArray(q0)
+					 canvases[2].plotter.drawXTicksArray(m0)
+					 canvases[3].plotter.drawXTicksArray(r0)
                 setTimeout(() => {
                     console.log("Drawing dashed line at x=7");
                     canvases[1].plotter.drawDashedLine(8, 8, 8, -8, 'red', [5, 2])

@@ -88,12 +88,13 @@ export class Plotter {
 
 		this.ctx.restore();
 	}
-	// Метод: Нарисовать насечки
-	// Параметры:
-	//  xCell - ширина клетки
-	//  yCell - высота клетки
-	//  color - цвет насечек
-	drawTicks(xCell, yCell, color = "black") {
+
+	/**
+	 * Рисует насечки по оси X без смещения (строго по координатам)
+	 * @param {number} xCell - шаг между насечками (в единицах данных)
+	 * @param {string} color - цвет насечек
+	 */
+	drawXTicks(xCell, color = "black") {
 		this.ctx.save();
 		this.ctx.translate(this.x0, this.y0);
 		this.ctx.scale(1, -1);
@@ -104,14 +105,55 @@ export class Plotter {
 		this.ctx.beginPath();
 
 		xCell /= this.xScale;
-		yCell /= this.yScale;
 
 		let x = this.xMin;
 		do {
-			this.ctx.moveTo(x, -4);
-			this.ctx.lineTo(x, 4);
+			this.ctx.moveTo(x, -4); // Без смещения
+			this.ctx.lineTo(x, 4); // Без смещения
 			x += xCell;
 		} while (x <= this.xMax);
+
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+
+	drawXTicksArray(xArray, color = "black") {
+		this.ctx.save();
+		this.ctx.translate(this.x0, this.y0);
+		this.ctx.scale(1, -1); // Инверсия Y-оси
+
+		this.ctx.lineWidth = 1;
+		this.ctx.strokeStyle = color;
+
+		this.ctx.beginPath();
+
+		for (let i = 0; i < xArray.length; i++) {
+			const x = xArray[i] / this.xScale;
+
+			this.ctx.moveTo(x, -4); // Верх насечки
+			this.ctx.lineTo(x, 4); // Низ насечки
+		}
+
+		this.ctx.stroke();
+		this.ctx.restore();
+	}
+
+	/**
+	 * Рисует насечки только по оси Y
+	 * @param {number} yCell - шаг между насечками (в единицах данных)
+	 * @param {string} color - цвет насечек
+	 */
+	drawYTicks(yCell, color = "black") {
+		this.ctx.save();
+		this.ctx.translate(this.x0, this.y0);
+		this.ctx.scale(1, -1);
+
+		this.ctx.lineWidth = 1;
+		this.ctx.strokeStyle = color;
+
+		this.ctx.beginPath();
+
+		yCell /= this.yScale;
 
 		let y = this.yMin;
 		do {
@@ -121,33 +163,26 @@ export class Plotter {
 		} while (y <= this.yMax);
 
 		this.ctx.stroke();
-
 		this.ctx.restore();
 	}
-	// Метод: Нарисовать единицы
+
+	// Метод: Нарисовать единицы только по оси Y
 	// Параметры:
-	//  xCell - ширина клетки
-	//  yCell - высота клетки
-	//  color - цвет единиц
-	//  font  - шрифт единиц
-	drawUnits(xCell, yCell, color = "black", font = "10px Arial") {
+	//  xCell - ширина клетки по оси X (не используется, можно убрать или оставить для вычислений)
+	//  yCell - высота клетки по оси Y
+	//  color - цвет текста
+	//  font  - шрифт текста
+	drawUnitsY(yCell, color = "black", font = "10px Arial") {
 		this.ctx.save();
 		this.ctx.translate(this.x0, this.y0);
 
 		this.ctx.fillStyle = color;
 		this.ctx.font = font;
 
-		xCell /= this.xScale;
 		yCell /= this.yScale;
 
 		this.ctx.textAlign = "left";
 		this.ctx.textBaseline = "top";
-
-		let x = this.xMin;
-		do {
-			this.ctx.fillText(x * this.xScale, x + 4, 4);
-			x += xCell;
-		} while (x <= this.xMax);
 
 		let y = this.yMin;
 		do {
@@ -157,6 +192,68 @@ export class Plotter {
 
 		this.ctx.restore();
 	}
+
+	/*
+    Рисует подписи значений на оси X согласно переданному массиву
+   @param {Array} xValues - массив значений для отметки на оси X (например, [0, 5, 7, 8, 20])
+   * @param {string} color - цвет текста
+   * @param {string} font - шрифт текста
+   * @param {number} yOffset - смещение подписи относительно оси (в пикселях)
+   */
+	drawXAxisValues(xValues, color = "black", font = "10px Arial", yOffset = 15) {
+		this.ctx.save();
+		this.ctx.translate(this.x0, this.y0);
+
+		this.ctx.fillStyle = color;
+		this.ctx.font = font;
+		this.ctx.textAlign = "center";
+		this.ctx.textBaseline = "top";
+
+		// Рисуем подписи для каждого значения
+		xValues.forEach((value) => {
+			const x = value / this.xScale; // Переводим в координаты канваса
+			this.ctx.fillText(value.toString(), x, yOffset);
+
+			// Дополнительно рисуем маленькую отметку на оси
+			this.ctx.beginPath();
+			this.ctx.moveTo(x, 0);
+			this.ctx.lineTo(x, 5);
+			this.ctx.stroke();
+		});
+
+		this.ctx.restore();
+	}
+
+	/**
+	 * Рисует подписи единиц по оси X со смещением вправо
+	 * @param {number} xCell - шаг между подписями (в единицах данных)
+	 * @param {string} color - цвет текста
+	 * @param {string} font - шрифт текста
+	 * @param {number} xOffset - смещение вправо в пикселях (по умолчанию 2px)
+	 */
+	drawUnitsX(xCell, color = "black", font = "10px Arial", xOffset = 2) {
+		this.ctx.save();
+		this.ctx.translate(this.x0, this.y0);
+
+		this.ctx.fillStyle = color;
+		this.ctx.font = font;
+		this.ctx.textAlign = "center";
+		this.ctx.textBaseline = "top";
+
+		// Переводим xCell из единиц данных в пиксели
+		xCell /= this.xScale;
+
+		// Рисуем подписи вдоль оси X со смещением
+		let x = this.xMin;
+		do {
+			const label = x * this.xScale;
+			this.ctx.fillText(label, x + xOffset, 4); // Добавлено xOffset к координате X
+			x += xCell;
+		} while (x <= this.xMax);
+
+		this.ctx.restore();
+	}
+
 	// Метод: Нарисовать график
 	// Параметры:
 	//  xArray - массив X-координат
@@ -164,34 +261,54 @@ export class Plotter {
 	//  color  - цвет графика
 	//  dots   - показать точки?
 	//  line   - показать линию?
-	drawGraph(xArray, yArray, color = "blue", dots = 0 * true, line = true) {
+	drawGraph(xArray, yArray, color = "blue", dots = false, line = true) {
 		this.ctx.save();
 		this.ctx.translate(this.x0, this.y0);
-		this.ctx.scale(1, -1);
 
 		this.ctx.lineWidth = 1;
 		this.ctx.strokeStyle = color;
+		this.ctx.fillStyle = color;
+		this.ctx.font = "10px Arial";
+		this.ctx.textAlign = "center";
+		this.ctx.textBaseline = "middle";
 
+		// 🧭 Начинаем рисовать график
 		this.ctx.beginPath();
-
-		let angle2PI = 2 * Math.PI;
-
 		for (let i = 0; i < xArray.length; i++) {
 			let x = xArray[i] / this.xScale;
-			let y = yArray[i] / this.yScale;
+			let y = -yArray[i] / this.yScale;
 
-			if (line && i != 0) {
+			if (line && i !== 0) {
 				this.ctx.lineTo(x, y);
 			} else {
 				this.ctx.moveTo(x, y);
 			}
-			if (dots) {
-				this.ctx.arc(x, y, 1, 0, angle2PI);
-				this.ctx.moveTo(x, y);
-			}
 		}
+		this.ctx.stroke(); // ✨ ВАЖНО: рисуем линию графика
 
-		this.ctx.stroke();
+		// 🔵 Рисуем точки и значения Y
+		for (let i = 0; i < xArray.length; i++) {
+			let x = xArray[i] / this.xScale;
+			let y = -yArray[i] / this.yScale;
+
+			if (dots) {
+				this.ctx.beginPath();
+				this.ctx.arc(x, y, 2, 0, 2 * Math.PI);
+				this.ctx.fill();
+			}
+
+			// Отображаем значение Y над точкой
+			this.ctx.fillText(yArray[i].toString(), x, y - 10);
+
+			// 📏 Насечка на оси X
+			this.ctx.beginPath();
+			this.ctx.moveTo(x, 0);
+			this.ctx.lineTo(x, 5);
+			this.ctx.stroke();
+
+			// Подпись значения X под осью
+			this.ctx.fillText(xArray[i].toString(), x, 15);
+		}
 
 		this.ctx.restore();
 	}
@@ -212,5 +329,9 @@ export class Plotter {
 		this.ctx.stroke();
 
 		this.ctx.restore();
+	}
+
+	clearCanvas() {
+		this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 	}
 }
