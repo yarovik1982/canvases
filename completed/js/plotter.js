@@ -1,6 +1,8 @@
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
 //https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
 
+
+//plotter.js
 export class Plotter {
 	// Параметры:
 	//  ctx - контекст канваса

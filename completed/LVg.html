@@ -1,39 +1,412 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link rel="stylesheet" href="./css/index.css">
-   <script type="module" src="./js/LV.js" defer></script>
-   <title>Example 2</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Масштабируемая балка</title>
+  <link rel="stylesheet" href="./css/index.css">
+  <script type="module" src="./js/main.js" defer></script>
+  <!-- <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+    }
+    .header {
+      padding: 1rem;
+      background: #2c3e50;
+      color: white;
+    }
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      background: #3498db;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #2980b9;
+    }
+    .main {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    .title {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      border: 1px solid #ddd;
+      display: block;
+    }
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s;
+    }
+    .modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-offset {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      width: 300px;
+    }
+    .modal__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .modal-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .modal-input {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .modal-group {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style> -->
 </head>
-
 <body>
-   <!-- <header class="header">
-      <button class="btn">Ввод данных</button>
-      <button class="btn">Добавить</button>
-      <button class="btn">Изменить</button>
-      <button class="btn">Очистить</button>
-   </header> -->
-   <main class="main">
-      <div class="container">
-         <h2 class="title">Балка</h2>
-         <canvas id="beam" width="800" height="400"></canvas>
-      </div>
-      <div class="container">
-         <h2 class="title">Линия влияния поперечной силы</h2>
-         <canvas id="canvas-2" width="800" height="400"></canvas>
-      </div>
-      <div class="container">
-         <h2 class="title">Линия влияния изгибающего момента</h2>
-         <canvas id="canvas-3" width="800" height="400"></canvas>
-      </div>
-      <div class="container">
-         <h2 class="title">Линия влияния реакции опор</h2>
-         <canvas id="canvas-4" width="800" height="400"></canvas>
-      </div>
-   </main>
-</body>
+  <header class="header">
+    <p class="temp">
+      [ 2,   7 ,  9 ,  14 , 5 ,  12 , 16 , 19 ]
+      ["O", "O", "O", "O", "S", "S", "S", "OF"]
+    </p>
+    <button class="btn btn-32" id="for-leng-beam" style="margin-left: auto;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
+        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
+      </svg>
+    </button>
+    
+  </header>
 
+  <main class="main">
+    <div class="container">
+      <h2 class="title">Балка</h2>
+      <canvas id="beam" width="800" height="400" title="Кликните по оси X "></canvas>
+    </div>
+    <div class="container">
+      <h2 class="title">Линия влияния поперечной силы</h2>
+      <canvas id="canvas-2" width="800" height="400"></canvas>
+    </div>
+    <div class="container">
+      <h2 class="title">Линия влияния изгибающего момента</h2>
+      <canvas id="canvas-3" width="800" height="400"></canvas>
+    </div>
+    <div class="container">
+      <h2 class="title">Линия влияния реакции опор</h2>
+      <canvas id="canvas-4" width="800" height="400"></canvas>
+    </div>
+  </main>
+
+  <!-- Модальное окно -->
+    <div class="modal modal-support" id="modal-support">
+      <h3>Добавление опор</h3>
+      <div class="modal__header">
+         <button class="modal__close">&times;</button>
+      </div>
+      <div class="modal-row">
+         <button class="btn btn-size-32" data-literal="O" id="support">
+            <img src="./images/support.svg" alt="">
+         </button>
+         <button class="btn btn-size-32" data-literal="S" id="hinge">
+            <img src="./images/hinge.svg" alt="">
+         </button>
+         <button class="btn btn-size-32" data-literal="OF" id="fixedSupport">
+            <img src="./images/fixedSupport.svg" alt="">
+         </button>
+         <button class="btn btn-size-32" data-literal="ZL" id="sealingLeft">
+            <img src="./images/sealingLeft.svg" alt="">
+         </button>
+         <button class="btn btn-size-32" data-literal="ZR" id="sealingRight">
+            <img src="./images/sealingRight.svg" alt="">
+         </button>
+      </div>
+      <div class="modal-group">
+         <label for="inpSupports" style="font-size: 12px;">Введите верное значение в (м)</label>
+         <input type="number" id="inpSupports" class="modal-input" value="" autocomplete="off">
+      </div>
+      <div class="modal-group"
+         style="display: flex;padding-top: 8px;align-items: center;justify-content: space-between;">
+         <button class="btn " id="btn-cansel">Отменить</button>
+         <button class="btn " id="btn-support-save">Сохранить</button>
+      </div>
+   </div> 
+
+
+  <div class="modal modal-offset" id="modal-offset">
+    <div class="modal__header">
+      <button class="btn btn-32" id="btn-close-modal" style="margin-left: auto;">&times;</button>
+    </div>
+    <div class="modal-row">
+      <label for="inpZmax">Длина балки (м)</label>
+      <input type="number" class="modal-input" id="inpZmax" value="20" min="1" step="0.5">
+    </div>
+    <div class="modal-row">
+      <button class="btn" id="btn-reset">Сброс</button>
+      <button class="btn" id="btn-save-modal">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- <script type="module">
+    // === Plotter Class ===
+    class Plotter {
+      constructor(ctx, canvasWidth, canvasHeight, x0, y0, xMin, xMax, yMin, yMax) {
+        this.ctx = ctx;
+        this.x0 = x0;
+        this.y0 = y0;
+        this.xMin = xMin;
+        this.xMax = xMax;
+        this.yMin = yMin;
+        this.yMax = yMax;
+
+        // Пикселей на единицу (масштаб)
+        this.xScale = canvasWidth / (xMax - xMin);
+        this.yScale = canvasHeight / (yMax - yMin);
+      }
+
+      clear() {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+      }
+
+      // Преобразование логических координат в экранные
+      toScreen(logicalX, logicalY) {
+        const screenX = this.x0 + (logicalX - this.xMin) * this.xScale;
+        const screenY = this.y0 - (logicalY - this.yMin) * this.yScale;
+        return { x: screenX, y: screenY };
+      }
+
+      drawGrid(xCell, yCell, color = "lightgray") {
+        this.ctx.save();
+        this.ctx.lineWidth = 0.5;
+        this.ctx.strokeStyle = color;
+        this.ctx.beginPath();
+
+        let x = this.xMin;
+        while (x <= this.xMax) {
+          const { x: sx } = this.toScreen(x, 0);
+          const { y: syTop } = this.toScreen(x, this.yMax);
+          const { y: syBottom } = this.toScreen(x, this.yMin);
+          this.ctx.moveTo(sx, syTop);
+          this.ctx.lineTo(sx, syBottom);
+          x += xCell;
+        }
+
+        let y = this.yMin;
+        while (y <= this.yMax) {
+          const { y: sy } = this.toScreen(0, y);
+          const { x: sxLeft } = this.toScreen(this.xMin, y);
+          const { x: sxRight } = this.toScreen(this.xMax, y);
+          this.ctx.moveTo(sxLeft, sy);
+          this.ctx.lineTo(sxRight, sy);
+          y += yCell;
+        }
+
+        this.ctx.stroke();
+        this.ctx.restore();
+      }
+
+      drawAxes(xLabel = "X", yLabel = "Y", color = "black") {
+        this.ctx.save();
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = color;
+        this.ctx.beginPath();
+
+        // Ось X: от xMin до xMax, по Y=0
+        const { x: xStart, y: yZero } = this.toScreen(this.xMin, 0);
+        const { x: xEnd } = this.toScreen(this.xMax, 0);
+        this.ctx.moveTo(xStart, yZero);
+        this.ctx.lineTo(xEnd, yZero);
+
+        // Ось Y: в X=0
+        const { x: xZero, y: yStart } = this.toScreen(0, this.yMin);
+        const { y: yEnd } = this.toScreen(0, this.yMax);
+        this.ctx.moveTo(xZero, yStart);
+        this.ctx.lineTo(xZero, yEnd);
+
+        this.ctx.stroke();
+
+        // Подписи
+        this.ctx.fillStyle = color;
+        this.ctx.font = "12px Arial";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "top";
+        this.ctx.fillText(xLabel, (xStart + xEnd) / 2, yZero + 10);
+
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText(yLabel, xZero - 20, (yStart + yEnd) / 2);
+
+        this.ctx.restore();
+      }
+
+      drawTicks(xCell, yCell, color = "black") {
+        this.ctx.save();
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+
+        let x = this.xMin;
+        while (x <= this.xMax) {
+          const { x: sx, y: yZero } = this.toScreen(x, 0);
+          this.ctx.moveTo(sx, yZero - 5);
+          this.ctx.lineTo(sx, yZero + 5);
+          x += xCell;
+        }
+
+        let y = this.yMin;
+        while (y <= this.yMax) {
+          if (y === 0) {
+            y += yCell;
+            continue;
+          }
+          const { x: xZero, y: sy } = this.toScreen(0, y);
+          this.ctx.moveTo(xZero - 5, sy);
+          this.ctx.lineTo(xZero + 5, sy);
+          y += yCell;
+        }
+
+        this.ctx.stroke();
+        this.ctx.restore();
+      }
+
+      drawUnits(xCell, yCell, color = "black") {
+        this.ctx.save();
+        this.ctx.fillStyle = color;
+        this.ctx.font = "10px Arial";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "top";
+
+        let x = this.xMin;
+        while (x <= this.xMax) {
+          const { x: sx, y: yZero } = this.toScreen(x, 0);
+          this.ctx.fillText(x, sx, yZero + 8);
+          x += xCell;
+        }
+
+        this.ctx.textAlign = "right";
+        this.ctx.textBaseline = "middle";
+
+        let y = this.yMin;
+        while (y <= this.yMax) {
+          if (y === 0) {
+            y += yCell;
+            continue;
+          }
+          const { x: xZero, y: sy } = this.toScreen(0, y);
+          this.ctx.fillText(y, xZero - 8, sy);
+          y += yCell;
+        }
+
+        this.ctx.restore();
+      }
+
+      redraw(xMax) {
+        this.xMax = xMax;
+        this.xScale = 740 / (xMax - this.xMin); // Пересчитываем масштаб
+        this.clear();
+        this.drawGrid(1, 1);
+        this.drawAxes("X", "Y");
+        this.drawTicks(1, 1);
+        this.drawUnits(1, 1);
+      }
+    }
+
+    // === Утилиты ===
+    function openModal(modal) {
+      modal.classList.add("show");
+    }
+    function closeModal(modal) {
+      modal.classList.remove("show");
+    }
+
+    // === Инициализация ===
+    const canvases = [
+      { id: "beam", plotter: null },
+      { id: "canvas-2", plotter: null },
+      { id: "canvas-3", plotter: null },
+      { id: "canvas-4", plotter: null }
+    ];
+
+    let zmax = 20;
+
+    const modal = document.getElementById("modal-offset");
+    const inpZmax = document.getElementById("inpZmax");
+    const btnOpen = document.getElementById("for-leng-beam");
+    const btnSave = document.getElementById("btn-save-modal");
+    const btnClose = document.getElementById("btn-close-modal");
+    const btnReset = document.getElementById("btn-reset");
+
+    function initCanvases() {
+      for (const c of canvases) {
+        const el = document.getElementById(c.id);
+        const ctx = el.getContext("2d");
+        c.plotter = new Plotter(ctx, 740, 310, 30, 200, 0, zmax, -8, 8);
+        c.plotter.drawGrid(1, 1);
+        c.plotter.drawAxes("X", "Y");
+        c.plotter.drawTicks(1, 1);
+        c.plotter.drawUnits(1, 1);
+      }
+    }
+
+    // === Обработчики событий ===
+    btnOpen.addEventListener("click", () => openModal(modal));
+    btnClose.addEventListener("click", () => closeModal(modal));
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal(modal);
+    });
+
+    btnReset.addEventListener("click", () => {
+      inpZmax.value = 20;
+    });
+
+    btnSave.addEventListener("click", () => {
+      const value = parseFloat(inpZmax.value);
+      if (value && value > 0) {
+        zmax = value;
+        for (const c of canvases) {
+          c.plotter.redraw(zmax);
+        }
+        closeModal(modal);
+      }
+    });
+
+    // Запуск
+    initCanvases();
+  </script> -->
+</body>
 </html>

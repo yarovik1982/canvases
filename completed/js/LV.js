@@ -1,19 +1,60 @@
 //LV.js
 
 import { Plotter } from "./plotter.js";
+import { useUtils } from "./utils.js";
 
-
+const { openModal } = useUtils();
+const modal = document.querySelector(".modal");
+document.querySelector("#beam").addEventListener("click", (event) => {
+    // 1. Получаем координаты клика
+    const clickX = event.clientX;
+    const clickY = event.clientY;
+    const canvas = event.target;
+    const canvasRect = canvas.getBoundingClientRect();
+    
+    // 2. Преобразуем в координаты canvas
+    const canvasX = clickX - canvasRect.left;
+    const canvasY = clickY - canvasRect.top;
+    
+    // 3. Получаем plotter для текущего canvas
+    const currentCanvas = canvases.find(c => c.id === "beam");
+    if (!currentCanvas?.plotter) {
+        console.error("Plotter not initialized");
+        return;
+    }
+    const plotter = currentCanvas.plotter;
+    
+    // 4. Преобразуем в логические координаты (ВАША ФОРМУЛА)
+    const logicalX = (canvasX - plotter.x0) / plotter.xScale;
+    const logicalY = -(canvasY - plotter.y0) / plotter.yScale;
+    
+    console.log("Canvas coords:", canvasX, canvasY);
+    console.log("Logical coords:", logicalX.toFixed(2), logicalY.toFixed(2));
+    
+    // 5. Проверяем попадание в балку (примерные границы)
+    const isOnBeam = (
+        logicalX >= plotter.xMin && 
+        logicalX <= plotter.xMax && 
+        Math.abs(logicalY) <= 1.5  // Допуск ±1.5 единицы по Y
+    );
+    
+    if (isOnBeam) {
+        openModal(modal, logicalX.toFixed(2));
+    } else {
+        console.log("Click outside beam area");
+    }
+});
 // ДЛИНА БАЛКИ
-const zmax = 20;
+export const zmax = 20;
 // --- Инициализация всех canvas ---
-const canvases = [
+export const canvases = [
 	{ id: "beam", plotter: null, ctx: null },
 	{ id: "canvas-2", plotter: null, ctx: null },
 	{ id: "canvas-3", plotter: null, ctx: null },
 	{ id: "canvas-4", plotter: null, ctx: null },
 ];
 
-for (let c of canvases) {
+export for (let c of canvases) {
 	c.el = document.getElementById(c.id);
 	c.ctx = c.el.getContext("2d");
 	c.plotter = new Plotter(c.ctx, 740, 310, 30, 200, 0, zmax, -8, 8);
@@ -26,7 +67,6 @@ for (let c of canvases) {
 // --- ДЛЯ ПЕРВОГО КАНВАСА: ОПОРЫ И ШАРНИРЫ ---
 let contextBeam = canvases[0].ctx;
 let plotter = canvases[0].plotter;
-
 
 // Координаты опор и шарниров (для кликов)
 const supports = [
@@ -90,10 +130,10 @@ supports.forEach((sup) => {
 	} else if (sup.type === "fixed") {
 		drawImage(contextBeam, opnImg, x, y, "top-center", 30, 30);
 	} else if (sup.type === "Zl") {
-        drawImage(contextBeam, ZLImg, x, y, "center", 30, 30);
-    } else if (sup.type === "ZR") {
-        drawImage(contextBeam, ZRImg, x, y, "center", 30, 30);
-    }
+		drawImage(contextBeam, ZLImg, x, y, "center", 30, 30);
+	} else if (sup.type === "ZR") {
+		drawImage(contextBeam, ZRImg, x, y, "center", 30, 30);
+	}
 	sup._canvasX = x; // сохраняем для кликов
 	sup._canvasY = y;
 	// console.log("sup._canvasX: "+ sup._canvasX,"sup._canvasY: " + sup._canvasY)
@@ -101,81 +141,81 @@ supports.forEach((sup) => {
 
 // --- Обработка кликов по canvas beam ---
 canvases[0].el.addEventListener("click", function (e) {
-    const rect = canvases[0].el.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-    
-    let found = supports.find((sup) => {
-        let dx = clickX - sup._canvasX;
-        let dy = clickY - sup._canvasY;
-        let w = sup.type === "support" ? 30 : 30;
-        let h = 30;
-        let anchorY = sup.type === "hinge" ? -h / 2 : 0;
-        return dx >= -w/2 && dx <= w/2 && dy >= anchorY && dy <= anchorY + h;
-    });
+	const rect = canvases[0].el.getBoundingClientRect();
+	const clickX = e.clientX - rect.left;
+	const clickY = e.clientY - rect.top;
 
-    if (found) {
-        clickedSupports.add(found.x); // Добавляем координату X опоры
-        
-        // Рисуем вертикальные линии на остальных канвасах
-        for (let i = 0; i < canvases.length; i++) {
-            const c = canvases[i];
-            const plotter = c.plotter;
-            let x = plotter.x0 + found.x / plotter.xScale;
-            let y8 = plotter.y0 - 8 / plotter.yScale;
-            let y_8 = plotter.y0 - -8 / plotter.yScale;
-            let yTop = Math.min(y8, y_8);
-            let yBottom = Math.max(y8, y_8);
-            
-            c.ctx.save();
-            c.ctx.strokeStyle = "#000";
-            c.ctx.lineWidth = 1;
-            c.ctx.beginPath();
-            c.ctx.moveTo(x, yTop);
-            c.ctx.lineTo(x, yBottom);
-            c.ctx.stroke();
-            c.ctx.restore();
-        }
+	let found = supports.find((sup) => {
+		let dx = clickX - sup._canvasX;
+		let dy = clickY - sup._canvasY;
+		let w = sup.type === "support" ? 30 : 30;
+		let h = 30;
+		let anchorY = sup.type === "hinge" ? -h / 2 : 0;
+		return dx >= -w / 2 && dx <= w / 2 && dy >= anchorY && dy <= anchorY + h;
+	});
 
-        // Проверяем, все ли опоры кликнуты (например, только опоры типа "support")
-        const allSupports = supports.filter(s => s.type === "support").map(s => s.x);
-        const allClicked = allSupports.every(x => clickedSupports.has(x));
-        
-        if (allClicked) {
-            // Если все опоры кликнуты - рисуем Линии влияния
-            
-                canvases[1].plotter.drawGraph(q0,q1)
-                canvases[2].plotter.drawGraph(m0,m1)
-                canvases[3].plotter.drawGraph(r0,r1)
-                setTimeout(() => {
-                    console.log("Drawing dashed line at x=7");
-                    canvases[1].plotter.drawDashedLine(8, 8, 8, -8, 'red', [5, 2])
-                    canvases[2].plotter.drawDashedLine(8, 8, 8, -8, 'red', [5, 2])
-                    canvases[3].plotter.drawDashedLine(8, 8, 8, -8, 'red', [5, 2])
-                },1500)
-            
-        }
-    }
+	if (found) {
+		clickedSupports.add(found.x); // Добавляем координату X опоры
+
+		// Рисуем вертикальные линии на остальных канвасах
+		for (let i = 0; i < canvases.length; i++) {
+			const c = canvases[i];
+			const plotter = c.plotter;
+			let x = plotter.x0 + found.x / plotter.xScale;
+			let y8 = plotter.y0 - 8 / plotter.yScale;
+			let y_8 = plotter.y0 - -8 / plotter.yScale;
+			let yTop = Math.min(y8, y_8);
+			let yBottom = Math.max(y8, y_8);
+
+			c.ctx.save();
+			c.ctx.strokeStyle = "#000";
+			c.ctx.lineWidth = 1;
+			c.ctx.beginPath();
+			c.ctx.moveTo(x, yTop);
+			c.ctx.lineTo(x, yBottom);
+			c.ctx.stroke();
+			c.ctx.restore();
+		}
+
+		// Проверяем, все ли опоры кликнуты (например, только опоры типа "support")
+		const allSupports = supports
+			.filter((s) => s.type === "support")
+			.map((s) => s.x);
+		const allClicked = allSupports.every((x) => clickedSupports.has(x));
+
+		if (allClicked) {
+			// Если все опоры кликнуты - рисуем Линии влияния
+
+			canvases[1].plotter.drawGraph(q0, q1);
+			canvases[2].plotter.drawGraph(m0, m1);
+			canvases[3].plotter.drawGraph(r0, r1);
+			setTimeout(() => {
+				console.log("Drawing dashed line at x=7");
+				canvases[1].plotter.drawDashedLine(8, 8, 8, -8, "red", [5, 2]);
+				canvases[2].plotter.drawDashedLine(8, 8, 8, -8, "red", [5, 2]);
+				canvases[3].plotter.drawDashedLine(8, 8, 8, -8, "red", [5, 2]);
+			}, 1500);
+		}
+	}
 });
 
+var x1 = 0;
+var x2 = 5;
+var x3 = 10;
+var x4 = 16;
+var x5 = 21;
+var x6 = 30;
+var x7 = 33;
+var x8 = 36;
 
-var x1 = 0 
-var x2 = 5 
-var x3 = 10
-var x4 = 16
-var x5 = 21
-var x6 = 30
-var x7 = 33
-var x8 = 36
-
-var y1 = 0 
-var y2 = -3.38 
-var y3 = 2.25
-var y4 = -2.25 
-var y5 = 1.5
-var y6 = -0.75
-var y7 = 0.25
-var y8 = 0
+var y1 = 0;
+var y2 = -3.38;
+var y3 = 2.25;
+var y4 = -2.25;
+var y5 = 1.5;
+var y6 = -0.75;
+var y7 = 0.25;
+var y8 = 0;
 //ПОСТРОЕНИЕ ЛИНИИ ВЛИЯНИЯ
 // plotter.drawGraph([x1, x2], [y1, y2]);
 // plotter.drawGraph([x2, x3], [y2, y3]);
@@ -188,17 +228,17 @@ var y8 = 0
 //@------------------------------------------------------------
 // // ЛИНИИ ВЛИЯНИЯ ПОПЕРЕЧНОЙ СИЛЫ
 
-let q0 = [0,      5, 7,    8,   8, 9,   12,  16,   zmax];
+let q0 = [0, 5, 7, 8, 8, 9, 12, 16, zmax];
 let q1 = [-0.677, 1, 0, -0.5, 0.5, 0, -1.5, 1.5, -0.5];
 
 // // ЛИНИИ ВЛИЯНИЯ ИЗГИБАЮЩЕГО МОМЕНТА
 
-let m0 = [0,      5, 7, 8,   9,   12,  16,   zmax];
+let m0 = [0, 5, 7, 8, 9, 12, 16, zmax];
 let m1 = [0.677, -1, 0, 0.5, 0, -1.5, 1.5, -0.5];
 
 // // ЛИНИИ ВЛИЯНИЯ РЕАКЦИЙ ОПОР
 
-let r0 = [0, 9,  12,   16,    zmax];
+let r0 = [0, 9, 12, 16, zmax];
 let r1 = [0, 1, 2.5, -2.5, 0.833];
 
 // //ПОСТРОЕНИЕ ЛИНИИ ВЛИЯНИЯ
